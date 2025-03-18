@@ -11,7 +11,7 @@ pygame.font.init()
 # Constants
 TILE_SIZE = 16
 SCALE = 2
-SPEED = 2 * SCALE
+SPEED = 1.2 * SCALE
 FPS = 60
 
 # Colors
@@ -39,14 +39,17 @@ maze = [
     "#......##....##....##......#",
     "#.####.##.########.##.####.#",
     "#..........................#",
+    "#.####.#####.##.#####.####.#",
+    "#o...........##...........o#",
+    "#.####.#####.##.#####.####.#",
     "############################"
 ]
-ROWS = len(maze)  # Now 14
+ROWS = len(maze)  # Now 16
 COLS = len(maze[0])  # Still 28
 
 # Screen dimensions based on maze size
 SCREEN_WIDTH = COLS * TILE_SIZE * SCALE  # 896 pixels for 28 columns
-SCREEN_HEIGHT = ROWS * TILE_SIZE * SCALE  # 448 pixels for 14 rows
+SCREEN_HEIGHT = ROWS * TILE_SIZE * SCALE  # 512 pixels for 16 rows
 LINE_WIDTH = 4 * SCALE
 
 # Set up the display
