@@ -8,6 +8,9 @@ pygame.init()
 # Initialize font
 pygame.font.init()
 
+# Initialize sound mixer
+pygame.mixer.init()
+
 # Constants
 TILE_SIZE = 16
 SCALE = 2
@@ -141,6 +144,7 @@ class Pacman:
         i, j = int(self.position.y // (TILE_SIZE * SCALE)), int(self.position.x // (TILE_SIZE * SCALE))
         if 0 <= i < ROWS and 0 <= j < COLS and maze[i][j] in '.o':
             maze[i] = maze[i][:j] + ' ' + maze[i][j+1:]  # Remove pellet
+            eat_dot_sound.play()  # Play the eating sound
 
     def bump(self, ghost_position):
         if not self.bumped:  # Only bump if not already bumped
@@ -261,6 +265,15 @@ ghosts = [
 
 # Initialize font
 congratulations_font = pygame.font.SysFont('Arial', 48)
+
+# Load sounds
+try:
+    eat_dot_sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), 'sounds', 'eat_dot.wav'))
+    eat_dot_sound.set_volume(0.5)  # Set a lower volume to make it subtle
+except:
+    # Create a silent sound if file not found
+    eat_dot_sound = pygame.mixer.Sound(buffer=bytearray([0]*44))
+    print("Warning: Could not load eat_dot sound file")
 
 # Game loop
 running = True
