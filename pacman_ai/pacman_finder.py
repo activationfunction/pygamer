@@ -44,29 +44,35 @@ ORANGE = (255, 165, 0)
 GREEN = (0, 255, 0)
 
 maze = [
-    "################################",
-    "#..............##..............#",
-    "#.######.#####.##.#####.######.#",
-    "#.#....#.#...#....#...#.#....#.#",
-    "#.#.##.#.#.#.#.##.#.#.#.#.##.#.#",
-    "#.#.#..#...#.#....#.#...#..#.#.#",
-    "#.#.#.######.#.##.#.######.#.#.#",
-    "#.#.#........#....#........#.#.#",
-    "#.#.##########.##.##########.#.#",
-    "#.#............##............#.#",
-    "#.############################.#",
-    "#..............................#",
-    "#.############################.#",
-    "#.#............##............#.#",
-    "#.#.##########.##.##########.#.#",
-    "#.#.#........#....#........#.#.#",
-    "#.#.#.######.#.##.#.######.#.#.#",
-    "#.#.#..#...#.#....#.#...#..#.#.#",
-    "#.#.##.#.#.#.#.##.#.#.#.#.##.#.#",
-    "#.#....#.#...#....#...#.#....#.#",
-    "#.######.#####.##.#####.######.#",
-    "#..............##..............#",
-    "################################"
+    "########################################",  # 40 cols
+    "#..............##......................#",
+    "#.######.#####.##.#####.######.....#...#", # Adjusted path
+    "#.#....#.#...#....#...#.#....#.#.#.#.#.#",
+    "#.#.##.#.#.#.#.##.#.#.#.#.##.#.#.#.#.#.#",
+    "#.#.#..#...#.#....#.#...#..#.#...#...#.#",
+    "#.#.#.######.#.##.#.######.#.#####.###.#",
+    "#.#.#........#....#........#.#...#...#.#",
+    "#.#.##########.##.##########.#.#.#####.#",
+    "#.#............##............#.#.....#.#",
+    "#.############################.#######.#",
+    "#..............................#.....#.#",
+    "#.#####.######################.#.#####.#",
+    "#.#...#........##............#.#.....#.#",
+    "#.#.###.######.##.##########.#.#.#####.#",
+    "#.#.#..........#....#........#.#.#...#.#",
+    "#.#.#.########.#.##.#.######.#.#.#.###.#",
+    "#.#.#..#.....#.#....#.#...#..#.#.#...#.#",
+    "#.#.##.#.#.#.#.#.##.#.#.#.#.##.#.#####.#",
+    "#.#....#.#...#....#...#.#....#.#.....#.#",
+    "#.######.#####.##.#####.######.#######.#",
+    "#..............##..............#.....#.#",
+    "#.######.######################.#.#####.#",
+    "#.#....#.......................#.#...#.#",
+    "#.######.#####.##.#####.######.#.#.###.#",
+    "#..............##..............#.....#.#",
+    "#.##########.####.##########.########.#", # Added row
+    "#............#....#............#.......#", # Added row
+    "########################################"   # 29 rows
 ]
 
 maze2 = [
@@ -98,8 +104,9 @@ maze2 = [
 ROWS = len(maze)
 COLS = len(maze[0])
 
-# Convert maze to list of lists for mutability
-maze = [list(row) for row in maze]
+# Convert maze to list of lists for mutability and ensure consistent row lengths
+COLS = 40  # Set the desired column count
+maze = [list(row[:COLS].ljust(COLS, '#')) for row in maze]  # Limit to COLS chars and pad if needed
 
 # Define positions
 start_pos = (1, 1)  # Pacman starts here
@@ -123,19 +130,55 @@ clock = pygame.time.Clock()
 # Background with walls
 background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 background.fill(BLACK)
+
+# For debugging
+row_lengths = [len(row) for row in maze]
+print(f"ROWS={ROWS}, COLS={COLS}")
+print(f"Row lengths after normalization: {row_lengths}")
+
+# Safer wall drawing approach using individual safe access checks
 for i in range(ROWS):
-    for j in range(COLS):
-        if maze[i][j] == '#':
-            x = j * TILE_SIZE * SCALE
-            y = i * TILE_SIZE * SCALE
-            if i == 0 or maze[i-1][j] != '#':
-                pygame.draw.line(background, BLUE, (x, y), (x + TILE_SIZE * SCALE, y), LINE_WIDTH)
-            if j == 0 or maze[i][j-1] != '#':
-                pygame.draw.line(background, BLUE, (x, y), (x, y + TILE_SIZE * SCALE), LINE_WIDTH)
-            if i == ROWS-1 or maze[i+1][j] != '#':
-                pygame.draw.line(background, BLUE, (x, y + TILE_SIZE * SCALE), (x + TILE_SIZE * SCALE, y + TILE_SIZE * SCALE), LINE_WIDTH)
-            if j == COLS-1 or maze[i][j+1] != '#':
-                pygame.draw.line(background, BLUE, (x + TILE_SIZE * SCALE, y), (x + TILE_SIZE * SCALE, y + TILE_SIZE * SCALE), LINE_WIDTH)
+    # Skip if row doesn't exist (defensive)
+    if i >= len(maze):
+        continue
+        
+    for j in range(len(maze[i])): # Use actual row length, not COLS
+        # Safe access check
+        try:
+            if maze[i][j] == '#':
+                x = j * TILE_SIZE * SCALE
+                y = i * TILE_SIZE * SCALE
+
+                # Draw top border if top cell isn't a wall
+                top_is_wall = False
+                if i > 0 and j < len(maze[i-1]):  # Check if top row exists and j is valid
+                    top_is_wall = maze[i-1][j] == '#'
+                if i == 0 or not top_is_wall:
+                    pygame.draw.line(background, BLUE, (x, y), (x + TILE_SIZE * SCALE, y), LINE_WIDTH)
+
+                # Draw left border if left cell isn't a wall
+                left_is_wall = False
+                if j > 0:  # Check if left column exists
+                    left_is_wall = maze[i][j-1] == '#'
+                if j == 0 or not left_is_wall:
+                    pygame.draw.line(background, BLUE, (x, y), (x, y + TILE_SIZE * SCALE), LINE_WIDTH)
+
+                # Draw bottom border if bottom cell isn't a wall
+                bottom_is_wall = False
+                if i + 1 < len(maze) and j < len(maze[i+1]):  # Check if bottom row exists and j is valid
+                    bottom_is_wall = maze[i+1][j] == '#'
+                if i == len(maze) - 1 or not bottom_is_wall:
+                    pygame.draw.line(background, BLUE, (x, y + TILE_SIZE * SCALE), (x + TILE_SIZE * SCALE, y + TILE_SIZE * SCALE), LINE_WIDTH)
+
+                # Draw right border if right cell isn't a wall
+                right_is_wall = False
+                if j + 1 < len(maze[i]):  # Check if right column exists
+                    right_is_wall = maze[i][j+1] == '#'
+                if j == len(maze[i]) - 1 or not right_is_wall:
+                    pygame.draw.line(background, BLUE, (x + TILE_SIZE * SCALE, y), (x + TILE_SIZE * SCALE, y + TILE_SIZE * SCALE), LINE_WIDTH)
+        except IndexError as e:
+            print(f"ERROR at row={i}, col={j}: {e}")
+            continue
 
 # Pacman class
 class Pacman:
@@ -295,15 +338,18 @@ while running:
     # Drawing
     screen.blit(background, (0, 0))
     for i in range(ROWS):
+        if i >= len(maze):
+            continue
         for j in range(COLS):
-            if maze[i][j] == '.':
-                x = j * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
-                y = i * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
-                pygame.draw.circle(screen, WHITE, (x, y), 2 * SCALE)
-            elif maze[i][j] == 'o':
-                x = j * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
-                y = i * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
-                pygame.draw.circle(screen, WHITE, (x, y), 4 * SCALE)
+            if j < len(maze[i]):  # Check index is valid
+                if maze[i][j] == '.':
+                    x = j * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
+                    y = i * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
+                    pygame.draw.circle(screen, WHITE, (x, y), 2 * SCALE)
+                elif maze[i][j] == 'o':
+                    x = j * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
+                    y = i * TILE_SIZE * SCALE + TILE_SIZE * SCALE // 2
+                    pygame.draw.circle(screen, WHITE, (x, y), 4 * SCALE)
 
     for ghost in ghosts:
         ghost.draw()
